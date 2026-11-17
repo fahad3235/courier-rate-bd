@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Courier Rate BD — Parcel Cost Estimator</title>
+<meta name="description" content="Offline bilingual Bangladesh courier rate comparison and parcel cost estimator. Your rates only — no real courier prices included.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div class="brand">
+      <h1 data-i18n="appTitle">Courier Rate BD</h1>
+      <p class="tagline" data-i18n="appTagline">Compare courier rates &amp; estimate parcel costs — offline, with your own rates only.</p>
+    </div>
+    <button id="langToggle" class="lang-btn" type="button" data-i18n="langButton">বাংলা</button>
+  </header>
+
+  <section class="dashboard" aria-label="Dashboard">
+    <div class="stat">
+      <span class="stat-label" data-i18n="statCouriers">Couriers saved</span>
+      <span class="stat-value" id="statCouriers">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label" data-i18n="statCheapest">Cheapest Inside-Dhaka base</span>
+      <span class="stat-value" id="statCheapest">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label" data-i18n="statFastest">Fastest delivery</span>
+      <span class="stat-value" id="statFastest">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label" data-i18n="statLastEstimate">Last estimate</span>
+      <span class="stat-value stat-value-small" id="statLastEstimate">—</span>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab active" type="button" role="tab" data-tab="estimator" data-i18n="tabEstimator">Estimator</button>
+    <button class="tab" type="button" role="tab" data-tab="couriers" data-i18n="tabCouriers">Couriers</button>
+    <button class="tab" type="button" role="tab" data-tab="compare" data-i18n="tabCompare">Compare</button>
+    <button class="tab" type="button" role="tab" data-tab="data" data-i18n="tabData">Data</button>
+  </nav>
+
+  <main>
+    <!-- ESTIMATOR -->
+    <section id="tab-estimator" class="tab-panel active" role="tabpanel">
+      <h2 data-i18n="estTitle">Parcel cost estimator</h2>
+      <form id="estimateForm" class="card form-card" novalidate>
+        <div class="field">
+          <label for="estWeight" data-i18n="estWeight">Weight (kg)</label>
+          <input id="estWeight" type="number" min="0" max="50" step="0.01" inputmode="decimal" placeholder="2.5">
+          <small class="hint" data-i18n="estWeightHint">More than 0, up to 50 kg. Extra weight is charged per started kg above 1 kg.</small>
+          <p class="field-error" id="errWeight" hidden></p>
+        </div>
+        <div class="field">
+          <label for="estZone" data-i18n="estZone">Delivery zone</label>
+          <select id="estZone">
+            <option value="inside" data-i18n="estZoneInside">Inside Dhaka</option>
+            <option value="outside" data-i18n="estZoneOutside">Outside Dhaka</option>
+          </select>
+          <p class="field-error" id="errZone" hidden></p>
+        </div>
+        <div class="field">
+          <label for="estCod" data-i18n="estCod">COD amount (৳, optional)</label>
+          <input id="estCod" type="number" min="0" step="1" inputmode="decimal" placeholder="0" value="0">
+          <small class="hint" data-i18n="estCodHint">Cash on delivery amount you will collect. Leave 0 if no COD.</small>
+          <p class="field-error" id="errCod" hidden></p>
+        </div>
+        <button class="btn btn-primary" type="submit" data-i18n="estButton">Estimate cost</button>
+      </form>
+
+      <h3 data-i18n="estResultsTitle">Estimated cost per courier</h3>
+      <div id="estimateResults" class="results">
+        <p class="empty" data-i18n="estEmptyResults">Enter a weight and press “Estimate cost” to see prices.</p>
+      </div>
+    </section>
+
+    <!-- COURIERS -->
+    <section id="tab-couriers" class="tab-panel" role="tabpanel">
+      <h2 data-i18n="couriersTitle">Your couriers</h2>
+      <div id="courierList" class="courier-grid"></div>
+      <p class="empty" id="courierEmpty" data-i18n="couriersEmpty" hidden>No couriers yet. Add your first courier below — use the rates from the courier’s own offer.</p>
+
+      <form id="courierForm" class="card form-card" novalidate>
+        <h3 id="courierFormTitle">Add courier</h3>
+        <div class="field">
+          <label for="cName" data-i18n="courierName">Courier name</label>
+          <input id="cName" type="text" maxlength="60" data-i18n-ph="courierNamePh" placeholder="e.g. Sundarban Courier">
+          <p class="field-error" id="errName" hidden></p>
+        </div>
+        <div class="zone-grid">
+          <fieldset class="zone-fieldset">
+            <legend data-i18n="zoneInside">Inside Dhaka rates</legend>
+            <div class="field"><label for="inBase" data-i18n="fBase">Base charge — first 1 kg (৳)</label><input id="inBase" type="number" min="0" step="0.01" inputmode="decimal" placeholder="60"><p class="field-error" id="errInBase" hidden></p></div>
+            <div class="field"><label for="inPerKg" data-i18n="fPerKg">Per extra kg (৳)</label><input id="inPerKg" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20"><p class="field-error" id="errInPerKg" hidden></p></div>
+            <div class="field"><label for="inCodPct" data-i18n="fCodPct">COD fee (%)</label><input id="inCodPct" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="1"><p class="field-error" id="errInCodPct" hidden></p></div>
+            <div class="field"><label for="inMin" data-i18n="fMinCharge">Minimum charge (৳)</label><input id="inMin" type="number" min="0" step="0.01" inputmode="decimal" placeholder="60"><p class="field-error" id="errInMin" hidden></p></div>
+            <div class="field-row">
+              <div class="field"><label for="inDaysMin" data-i18n="fDaysMin">Delivery days — from</label><input id="inDaysMin" type="number" min="1" step="1" inputmode="numeric" placeholder="1"><p class="field-error" id="errInDaysMin" hidden></p></div>
+              <div class="field"><label for="inDaysMax" data-i18n="fDaysMax">Delivery days — to</label><input id="inDaysMax" type="number" min="1" step="1" inputmode="numeric" placeholder="2"><p class="field-error" id="errInDaysMax" hidden></p></div>
+            </div>
+          </fieldset>
+          <fieldset class="zone-fieldset">
+            <legend data-i18n="zoneOutside">Outside Dhaka rates</legend>
+            <div class="field"><label for="outBase" data-i18n="fBase">Base charge — first 1 kg (৳)</label><input id="outBase" type="number" min="0" step="0.01" inputmode="decimal" placeholder="120"><p class="field-error" id="errOutBase" hidden></p></div>
+            <div class="field"><label for="outPerKg" data-i18n="fPerKg">Per extra kg (৳)</label><input id="outPerKg" type="number" min="0" step="0.01" inputmode="decimal" placeholder="30"><p class="field-error" id="errOutPerKg" hidden></p></div>
+            <div class="field"><label for="outCodPct" data-i18n="fCodPct">COD fee (%)</label><input id="outCodPct" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="1"><p class="field-error" id="errOutCodPct" hidden></p></div>
+            <div class="field"><label for="outMin" data-i18n="fMinCharge">Minimum charge (৳)</label><input id="outMin" type="number" min="0" step="0.01" inputmode="decimal" placeholder="120"><p class="field-error" id="errOutMin" hidden></p></div>
+            <div class="field-row">
+              <div class="field"><label for="outDaysMin" data-i18n="fDaysMin">Delivery days — from</label><input id="outDaysMin" type="number" min="1" step="1" inputmode="numeric" placeholder="2"><p class="field-error" id="errOutDaysMin" hidden></p></div>
+              <div class="field"><label for="outDaysMax" data-i18n="fDaysMax">Delivery days — to</label><input id="outDaysMax" type="number" min="1" step="1" inputmode="numeric" placeholder="4"><p class="field-error" id="errOutDaysMax" hidden></p></div>
+            </div>
+          </fieldset>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" id="courierSubmit" data-i18n="btnAdd">Add courier</button>
+          <button class="btn btn-ghost" type="button" id="courierCancel" data-i18n="btnCancel" hidden>Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- COMPARE -->
+    <section id="tab-compare" class="tab-panel" role="tabpanel">
+      <h2 data-i18n="compareTitle">Compare all couriers</h2>
+      <div class="sort-bar">
+        <button class="btn btn-small" type="button" id="sortPrice" data-i18n="sortByPrice">Sort by price (Inside Dhaka base)</button>
+        <button class="btn btn-small" type="button" id="sortFastest" data-i18n="sortByFastest">Sort by fastest delivery</button>
+      </div>
+      <div class="table-wrap">
+        <table id="compareTable">
+          <thead>
+            <tr>
+              <th data-i18n="colCourier">Courier</th>
+              <th colspan="4" data-i18n="estZoneInside">Inside Dhaka</th>
+              <th colspan="4" data-i18n="estZoneOutside">Outside Dhaka</th>
+            </tr>
+            <tr>
+              <th></th>
+              <th data-i18n="colBase">Base (৳)</th>
+              <th data-i18n="colPerKg">Per kg (৳)</th>
+              <th data-i18n="colCod">COD %</th>
+              <th data-i18n="colDays">Days</th>
+              <th data-i18n="colBase">Base (৳)</th>
+              <th data-i18n="colPerKg">Per kg (৳)</th>
+              <th data-i18n="colCod">COD %</th>
+              <th data-i18n="colDays">Days</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="compareEmpty" data-i18n="compareEmpty" hidden>No couriers to compare yet.</p>
+    </section>
+
+    <!-- DATA -->
+    <section id="tab-data" class="tab-panel" role="tabpanel">
+      <h2 data-i18n="dataTitle">Your data</h2>
+      <p class="muted" data-i18n="dataIntro">All data stays in this browser (localStorage). No account, no server, no network requests.</p>
+
+      <div class="card data-card">
+        <h3 data-i18n="btnExport">Export JSON</h3>
+        <button class="btn btn-primary" type="button" id="exportBtn" data-i18n="btnExport">Export JSON</button>
+        <p class="status" id="exportStatus" aria-live="polite"></p>
+      </div>
+
+      <div class="card data-card">
+        <h3 data-i18n="importLabel">Import JSON</h3>
+        <p class="muted" data-i18n="importHint">Choose a JSON file exported from this app. Bad entries are rejected and reported — nothing is overwritten silently.</p>
+        <div class="form-actions">
+          <input type="file" id="importFile" accept=".json,application/json">
+          <button class="btn btn-primary" type="button" id="importBtn" data-i18n="importLabel">Import JSON</button>
+        </div>
+        <p class="status" id="importStatus" aria-live="polite"></p>
+      </div>
+
+      <div class="card data-card">
+        <h3 data-i18n="btnDemo">Load demo data</h3>
+        <p class="muted" data-i18n="demoNote">Demo sample rates — not real prices. Replace with the courier’s own offer.</p>
+        <button class="btn" type="button" id="demoBtn" data-i18n="btnDemo">Load demo data</button>
+        <p class="status" id="demoStatus" aria-live="polite"></p>
+      </div>
+
+      <div class="card data-card danger-card">
+        <h3 data-i18n="eraseTitle">Erase all data</h3>
+        <p class="muted" data-i18n="eraseHint">Type DELETE in the box, then press Erase all. This removes every courier and cannot be undone.</p>
+        <div class="form-actions">
+          <input type="text" id="eraseConfirm" data-i18n-ph="erasePh" placeholder="Type DELETE" autocomplete="off">
+          <button class="btn btn-danger" type="button" id="eraseBtn" data-i18n="btnErase">Erase all</button>
+        </div>
+        <p class="status" id="eraseStatus" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p data-i18n="footerNote">No real courier prices are included in this app. Every rate is entered by you from the courier’s own offer. Demo data is clearly labelled as sample rates.</p>
+  </footer>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
